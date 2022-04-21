@@ -1,11 +1,11 @@
 # named_entity_recognition
-  처음부터 해보는 NER
+- 처음부터 해보는 NER
 
 # NER 입력 데이터 
-  -Sentence, label
+- Sentence, label
 
 # NER 출력 데이터
-  -Sentence, predict_label, test_label
+- Sentence, predict_label, test_label
 
 
 # model
