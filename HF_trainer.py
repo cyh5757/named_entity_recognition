@@ -5,14 +5,22 @@ from sklearn.metrics import f1_score
 
 import torch
 
+# how to using huggingface tokenizer(roberta, bert) 
 from transformers import Autotokenizer
-from transformers import BertForSequenceClassification, AlbertForSequenceClassification
+# how to using huggingface token classification model
+# using etc.
+# config = AutoConfig.from_pretrained("bert-base-cased")
+# model = AutoModelForTokenClassification.from_config(config)
+from transformers import AutoModelForTokenClassification
+
+# huggingface Trainer
 from transformers import Trainer
 from transformers import TrainingArguments
 
-from simple_ntc.bert_dataset import TextClassificationCollator
-from simple_ntc.bert_dataset import TextClassificationDataset
-from simple_ntc.utils import read_text
+
+from bert_dataset import TokenCollator
+from bert_dataset import TokenDataset
+
 
 
 def define_argparser():
@@ -21,10 +29,12 @@ def define_argparser():
     p.add_argument('--model_fn', required=True)
     p.add_argument('--train_fn', required=True)
     # Recommended model list:
-    # - kykim/bert-kor-base
-    # - kykim/albert-kor-base
+    # - kykim/bert-kor-base //예시
+    # - klue/roberta-base
+    # - klue/bert-base
+    
 
-    p.add_argument('--pretrained_model_name', type=str, default='beomi/kcbert-base')
+    p.add_argument('--pretrained_model_name', type=str, default='klue/bert-base')
     p.add_argument('--use_albert', action='store_true')
 
     p.add_argument('--valid_ratio', type=float, default=.2)
@@ -63,8 +73,8 @@ def get_datasets(fn, valid_ratio=.2):
 
     idx = int(len(texts)*(1-valid_ratio))
 
-    train_dataset = TextClassificationDataset(texts[:idx], labels[:idx])
-    test_dataset = TextClassificationDataset(texts[idx:], labels[idx:])
+    train_dataset = TokenDataset(texts[:idx], labels[:idx])
+    test_dataset = TokenDataset(texts[idx:], labels[idx:])
      
     return train_dataset, valid_dataset, index_to_label
 
