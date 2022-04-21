@@ -1,11 +1,11 @@
 import argparse
 import random
 
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import f1_score
 
 import torch
 
-from transformers import BertTokenizerFast
+from transformers import Autotokenizer
 from transformers import BertForSequenceClassification, AlbertForSequenceClassification
 from transformers import Trainer
 from transformers import TrainingArguments
@@ -23,8 +23,7 @@ def define_argparser():
     # Recommended model list:
     # - kykim/bert-kor-base
     # - kykim/albert-kor-base
-    # - beomi/kcbert-base
-    # - beomi/kcbert-large
+
     p.add_argument('--pretrained_model_name', type=str, default='beomi/kcbert-base')
     p.add_argument('--use_albert', action='store_true')
 
@@ -74,7 +73,7 @@ def get_datasets(fn, valid_ratio=.2):
 
 def main(config):
     # Get pretrained tokenizer.
-    tokenizer = BertTokenizerFast.from_pretrained(config.pretrained_model_name)
+    tokenizer = Autotokenizer.from_pretrained(config.pretrained_model_name)
 
     #Get datasets and index to label map.
     train_dataset, valid_dataset, index_to_label = get_datasets(
@@ -94,3 +93,61 @@ def main(config):
         '#total_iters =', n_total_iterations,
         '#warmup_iters =', n_warmup_steps,
     )
+
+    # Get pretrained model with specified softmax layer.
+    model_loader = AlbertForSequenceClassification if config.use_albert else BertForSequenceClassification
+    model = model_loader.from_pretrained(
+        config.pretrained_model_name,
+        # label num
+        num_labels = len(index_to_label)
+    )
+
+    training_aregs = TrainingArguments(
+        output_dir='./.checkpoints',
+        num_train_epochs=config.n_epochs,
+        per_device_train_batch_size=config.batch_size_per_device,
+        per_device_eval_batch_size=config.batch_size_per_device,
+        warmup_steps=n_warmup_steps,
+        weight_decay=0.01,
+        fp16=True,
+        evaluation_strategy='epoch',
+        save_strategy='epoch',
+        logging_steps=n_total_iterations // 100,
+        save_steps=n_total_iterations // config.n_epochs,
+        load_best_model_at_end=True,
+    )
+
+    def compute_metrics(pred):
+        labels = pred.label_ids
+        preds = pred.predictions.argmax(-1)
+
+        return {
+            'f1_score': f1_score(labels, preds)
+        }
+
+    trainer = Trainer(
+        model=model,
+        args=training_args,
+        data_collator=TokenCollator(tokenizer,
+                                    config.max_length,
+                                    with_text=False),
+        train_dataset=train_dataset,
+        eval_dataset=valid_dataset,
+        compute_metrics=compute_metrics
+    )
+
+    trainer.train()
+
+    torch.save({
+        'rnn': None,
+        'cnn': None,
+        'bert': trainer.model.state_dict(),
+        'config': config,
+        'vocab': None,
+        'classes': index_to_label,
+        'tokenizer': tokenizer,
+    }, config.model_fn)
+
+    if __name__ == '__main__':
+    config = define_argparser()
+    main(config)
