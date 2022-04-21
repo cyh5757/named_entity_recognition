@@ -23,3 +23,17 @@
 # 해야하는 것
 - make model_train
 
+# MODEL 수행 형태
+- 받아온 data split
+- train text labels
+- text labels 숫자화
+- bert 화 input, attention_mask, labels, padding
+- datasets 으로 만들기
+- model
+
+# .py
+tokenizer , model 을 library로 받아오기
+def pre_trained->get_datasets -> trainer(huggingface) ->
+
+
+
