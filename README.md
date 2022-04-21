@@ -24,16 +24,11 @@
 - make model_train
 
 # MODEL 수행 형태
-- 받아온 data split
-- train text labels
-- text labels 숫자화
-- bert 화 input, attention_mask, labels, padding
-- datasets 으로 만들기
-- model
+- hugginface's trainer(plm, data_split(train&valid)&shuffle, compute_metrics, hf_trainer)
 
 # .py
 tokenizer , model 을 library로 받아오기
 def pre_trained->get_datasets -> trainer(huggingface) ->
 
 
-
+/*--꿀팁 : 깃 필사할때 main 부터 시작해서, main에따라 def는 나중에 정리 */
