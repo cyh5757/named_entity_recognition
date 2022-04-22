@@ -1,4 +1,4 @@
-/content/drive/MyDrive/tsv/19NX.tsv
+
 
 from sklearn.model_selection import StratifiedShuffleSplit
 from datasets import load_dataset

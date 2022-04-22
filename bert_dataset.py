@@ -2,7 +2,7 @@ import torch
 from torch.utils.data import Dataset
 
 
-class TextClassificationCollator():
+class TokenCollator():
 
     def __init__(self, tokenizer, max_length, with_text=True):
         self.tokenizer = tokenizer
@@ -32,7 +32,7 @@ class TextClassificationCollator():
         return return_value
 
 
-class TextClassificationDataset(Dataset):
+class TokenDataset(Dataset):
 
     def __init__(self, texts, labels):
         self.texts = texts

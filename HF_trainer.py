@@ -11,7 +11,7 @@ from transformers import AutoTokenizer
 from transformers import AutoModelForTokenClassification
 
 # using monologg/kobert tokenizer and model
-from tokenization_kobert import KoBertTokenizer
+from kobert_transformers.tokenization_kobert import KoBertTokenizer
 from transformers import BertModel
 
 # huggingface Trainer
