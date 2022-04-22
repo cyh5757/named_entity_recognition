@@ -13,7 +13,7 @@ from transformers import Autotokenizer
 # model = AutoModelForTokenClassification.from_config(config)
 from transformers import AutoModelForTokenClassification
 
-# monologg/kobert tokenizer and model
+# using monologg/kobert tokenizer and model
 from tokenization_kobert import KoBertTokenizer
 from transformers import BertModel
 # huggingface Trainer
@@ -33,12 +33,12 @@ def define_argparser():
     p.add_argument('--train_fn', required=True)
     # Recommended model list:
     # - kykim/bert-kor-base //예시
-    # - klue/roberta-base
+    # - monologg/kobert
     # - klue/bert-base
     
 
     p.add_argument('--pretrained_model_name', type=str, default='klue/bert-base')
-    p.add_argument('--use_albert', action='store_true')
+    p.add_argument('--use_monologg', action='store_true')
 
     p.add_argument('--valid_ratio', type=float, default=.2)
     p.add_argument('--batch_size_per_device', type=int, default=32)
@@ -86,8 +86,11 @@ def get_datasets(fn, valid_ratio=.2):
 
 def main(config):
     # Get pretrained tokenizer.
-    tokenizer = Autotokenizer.from_pretrained(config.pretrained_model_name)
-
+    tokenizer_load = KoBertTokenizer if config.use_monologg else Autotokenizer
+    tokenizer = tokenizer_load.from_pretrained(
+        config.pretrained_model_name
+    )
+    
     #Get datasets and index to label map.
     train_dataset, valid_dataset, index_to_label = get_datasets(
         config.train_fn,
@@ -107,8 +110,8 @@ def main(config):
         '#warmup_iters =', n_warmup_steps,
     )
 
-    # Get pretrained model with specified softmax layer.
-    model_loader = AlbertForSequenceClassification if config.use_albert else BertForSequenceClassification
+    # model_load
+    model_loader = BertModel if config.use_monologg else AutoModelForTokenClassification
     model = model_loader.from_pretrained(
         config.pretrained_model_name,
         # label num
