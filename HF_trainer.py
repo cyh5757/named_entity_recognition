@@ -7,7 +7,7 @@ from sklearn.metrics import f1_score, precision_score, recall_score
 import torch
 
 # how to using huggingface tokenizer(bert) 
-from transformers import Autotokenizer
+from transformers import AutoTokenizer
 from transformers import AutoModelForTokenClassification
 
 # using monologg/kobert tokenizer and model
@@ -218,16 +218,17 @@ trainer = Trainer(
 )
 
 trainer.train()
-    torch.save({
-        'rnn': None,
-        'cnn': None,
-        'bert': trainer.model.state_dict(),
-        'config': config,
-        'vocab': None,
-        'classes': index_to_label,
-        'tokenizer': tokenizer,
-    }, config.model_fn)
 
-    if __name__ == '__main__':
+torch.save({
+    'rnn': None,
+    'cnn': None,
+    'bert': trainer.model.state_dict(),
+    'config': config,
+    'vocab': None,
+    'classes': index_to_label,
+    'tokenizer': tokenizer,
+}, config.model_fn)
+
+if __name__ == '__main__':
     config = define_argparser()
     main(config)
