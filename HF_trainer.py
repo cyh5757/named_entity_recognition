@@ -124,21 +124,6 @@ def main(config):
     )
 
 
-    training_aregs = TrainingArguments(
-        output_dir='./.checkpoints',
-        num_train_epochs=config.n_epochs,
-        per_device_train_batch_size=config.batch_size_per_device,
-        per_device_eval_batch_size=config.batch_size_per_device,
-        warmup_steps=n_warmup_steps,
-        weight_decay=0.01,
-        fp16=True,
-        evaluation_strategy='epoch',
-        save_strategy='epoch',
-        logging_steps=n_total_iterations // 100,
-        save_steps=n_total_iterations // config.n_epochs,
-        load_best_model_at_end=True,
-    )
-    #
 
 metric = load_metric("seqeval")
 
@@ -170,19 +155,69 @@ batchify = DataCollatorForTokenClassification(
     tokenizer=tokenizer,
     padding=True
 )
-    trainer = Trainer(
-        model=model,
-        args=training_args,
-        data_collator=TokenCollator(tokenizer,
-                                    config.max_length,
-                                    with_text=False),
-        train_dataset=train_dataset,
-        eval_dataset=valid_dataset,
-        compute_metrics=compute_metrics
-    )
+    # training_aregs = TrainingArguments(
+    #     output_dir='./.checkpoints',
+    #     num_train_epochs=config.n_epochs,
+    #     per_device_train_batch_size=config.batch_size_per_device,
+    #     per_device_eval_batch_size=config.batch_size_per_device,
+    #     warmup_steps=n_warmup_steps,
+    #     weight_decay=0.01,
+    #     fp16=True,
+    #     evaluation_strategy='epoch',
+    #     save_strategy='epoch',
+    #     logging_steps=n_total_iterations // 100,
+    #     save_steps=n_total_iterations // config.n_epochs,
+    #     load_best_model_at_end=True,
+    # )
+    # #
 
-    trainer.train()
+    # trainer = Trainer(
+    #     model=model,
+    #     args=training_args,
+    #     data_collator=TokenCollator(tokenizer,
+    #                                 config.max_length,
+    #                                 with_text=False),
+    #     train_dataset=train_dataset,
+    #     eval_dataset=valid_dataset,
+    #     compute_metrics=compute_metrics
+    # )
 
+    # trainer.train()
+
+training_args = TrainingArguments(
+        output_dir='./results',     
+        evaluation_strategy="epoch",
+        per_device_train_batch_size=32, 
+        per_device_eval_batch_size=32,
+        learning_rate=1e-4,
+        weight_decay=0.01,
+        adam_beta1=.9,
+        adam_beta2=.95,
+        adam_epsilon=1e-8,
+        max_grad_norm=1.,
+        num_train_epochs=2,
+        lr_scheduler_type="linear",
+        warmup_steps=100,
+        logging_dir='./logs',
+        logging_strategy="steps",
+        logging_first_step=True,
+        logging_steps=100,
+        save_strategy="epoch",
+        seed=42,
+        dataloader_drop_last=False,
+        dataloader_num_workers=2
+)
+
+trainer = Trainer(
+    args=training_args,
+    data_collator=batchify,
+    model=model,
+    train_dataset=train_ds,
+    eval_dataset=valid_ds,
+    compute_metrics=compute_metrics
+)
+
+trainer.train()
     torch.save({
         'rnn': None,
         'cnn': None,
