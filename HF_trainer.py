@@ -33,6 +33,7 @@ def define_argparser():
 
     p.add_argument('--model_fn', required=True)
     p.add_argument('--train_fn', required=True)
+
     # Recommended model list:
     # - kykim/bert-kor-base //예시
     # - monologg/kobert
