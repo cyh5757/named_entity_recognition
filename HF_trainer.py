@@ -1,28 +1,30 @@
 import argparse
 import random
+import numpy as np
 
-from sklearn.metrics import f1_score
+from sklearn.metrics import f1_score, precision_score, recall_score
 
 import torch
 
-# how to using huggingface tokenizer(roberta, bert) 
+# how to using huggingface tokenizer(bert) 
 from transformers import Autotokenizer
-# how to using huggingface token classification model
-# using etc.
-# config = AutoConfig.from_pretrained("bert-base-cased")
-# model = AutoModelForTokenClassification.from_config(config)
 from transformers import AutoModelForTokenClassification
 
 # using monologg/kobert tokenizer and model
 from tokenization_kobert import KoBertTokenizer
 from transformers import BertModel
+
 # huggingface Trainer
 from transformers import Trainer
 from transformers import TrainingArguments
 
-
+#Cutomizer encoder
 from bert_dataset import TokenCollator
 from bert_dataset import TokenDataset
+
+
+from transformers.data.data_collator import DataCollatorForTokenClassification
+from datasets import load_metric
 
 
 
@@ -81,16 +83,27 @@ def get_datasets(fn, valid_ratio=.2):
      
     return train_dataset, valid_dataset, index_to_label
 
+def get_pretrained_model(num_labels: int):
 
-
-
-def main(config):
-    # Get pretrained tokenizer.
+    # tokenizer_load
     tokenizer_load = KoBertTokenizer if config.use_monologg else Autotokenizer
     tokenizer = tokenizer_load.from_pretrained(
         config.pretrained_model_name
     )
-    
+    # model_load
+    model_loader = BertModel if config.use_monologg else AutoModelForTokenClassification
+    model = model_loader.from_pretrained(
+        config.pretrained_model_name,
+        num_labels = num_labels
+    )
+
+    return model, tokenizer
+
+def main(config):
+
+    # load model, tokenizer    
+    model, tokenizer = get_pretrained_model(32)
+
     #Get datasets and index to label map.
     train_dataset, valid_dataset, index_to_label = get_datasets(
         config.train_fn,
@@ -110,13 +123,6 @@ def main(config):
         '#warmup_iters =', n_warmup_steps,
     )
 
-    # model_load
-    model_loader = BertModel if config.use_monologg else AutoModelForTokenClassification
-    model = model_loader.from_pretrained(
-        config.pretrained_model_name,
-        # label num
-        num_labels = len(index_to_label)
-    )
 
     training_aregs = TrainingArguments(
         output_dir='./.checkpoints',
@@ -132,15 +138,38 @@ def main(config):
         save_steps=n_total_iterations // config.n_epochs,
         load_best_model_at_end=True,
     )
+    #
 
-    def compute_metrics(pred):
-        labels = pred.label_ids
-        preds = pred.predictions.argmax(-1)
+metric = load_metric("seqeval")
 
-        return {
-            'f1_score': f1_score(labels, preds)
-        }
 
+def compute_metrics(p):
+    predictions, labels = p
+    predictions = np.argmax(predictions, axis=2)
+
+    # Remove ignored index (special tokens)
+    true_predictions = [
+        [list_of_labels[p] for (p, l) in zip(prediction, label) if l != -100]
+        for prediction, label in zip(predictions, labels)
+    ]
+    true_labels = [
+        [list_of_labels[l] for (p, l) in zip(prediction, label) if l != -100]
+        for prediction, label in zip(predictions, labels)
+    ]
+
+    results = metric.compute(predictions=true_predictions, references=true_labels)
+    return {
+        "precision": results["overall_precision"],
+        "recall": results["overall_recall"],
+        "f1": results["overall_f1"],
+        "accuracy": results["overall_accuracy"],
+    }
+
+
+batchify = DataCollatorForTokenClassification(
+    tokenizer=tokenizer,
+    padding=True
+)
     trainer = Trainer(
         model=model,
         args=training_args,
