@@ -9,7 +9,7 @@
 
 
 # model
-- PLM(BERT, koBERT(Klue, SKT))
+- PLM(BERT(KLUE), koBERT(monologg))
 - customize_model
 
 # 수행동작
