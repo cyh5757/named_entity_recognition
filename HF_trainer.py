@@ -27,11 +27,11 @@ from transformers.data.data_collator import DataCollatorForTokenClassification
 from datasets import load_metric
 
 
-
+#agrgs 사용
 def define_argparser():
     p = argparse.ArgumentParser()
 
-    p.add_argument('--model_fn', required=True)
+    p.add_argument('--file_fn', required=True)
     p.add_argument('--train_fn', required=True)
 
     # Recommended model list:
@@ -55,34 +55,38 @@ def define_argparser():
 
     return config
 
+
+def get_label_dict():
+    labels = ["PS", "FD", "TR", "AF", "OG", "LC", "CV", "DT", "TI", "QT", "EV", "AM", "PT", "MT", "TM"]
+    
+    BIO_labels = ['O']
+    for label in labels:
+        BIO_labels.append(label+'_B')
+        BIO_labels.append(label+'_I')
+
+    label_to_index = {label:index for index, label in enumerate(BIO_labels)}
+    index_to_label = {index:label for index, label in enumerate(BIO_labels)}
+
+    return label_to_index, index_to_label
+
+
+
 def get_datasets(fn, valid_ratio=.2):
     #Get list of labels and list of texts
-    labels, texts = pd.read_csv(config.data_fn)
+    data = pd.read_csv(fn)
+    data['sentence'].dropna(axis=0, inplace=True)
 
-    #Generate label to index map.
-    unique_labels = list(set(labels))
-    label_to_index = {}
-    index_to_label = {}
-
-    for i, label in enumerate(unique_labels):
-        label_to_index[label]= i
-        index_to_label[i] = label
-
-    # Convert label text to integer value.
-    labels = list(map(label_to_index.get, labels))
-
-    #Shuffle before split into train and validation set.
-    shuffled = list(zip(texts, labels))
+    # Shuffle before split into train and validation set.
+    shuffled = data.index.values
     random.shuffle(shuffled)
-    texts = [e[0] for e in shuffled]
-    labels = [e[1] for e in shuffled]
+    sentences = data.loc[shuffled]['sentence'].values
+    labels = data.loc[shuffled]['label'].apply(lambda x: eval(x)).values
+    idx = int(len(sentences) * (1 - valid_ratio))
 
-    idx = int(len(texts)*(1-valid_ratio))
+    train_dataset = TokenDataset(sentences[:idx], labels[:idx])
+    valid_dataset = TokenDataset(sentences[idx:], labels[idx:])
 
-    train_dataset = TokenDataset(texts[:idx], labels[:idx])
-    valid_dataset = TokenDataset(texts[idx:], labels[idx:])
-     
-    return train_dataset, valid_dataset, index_to_label
+    return train_dataset, valid_dataset
 
 def get_pretrained_model(num_labels: int):
 
@@ -97,20 +101,22 @@ def get_pretrained_model(num_labels: int):
         config.pretrained_model_name,
         num_labels = num_labels
     )
-
     return model, tokenizer
 
 def main(config):
 
-    # load model, tokenizer    
-    model, tokenizer = get_pretrained_model(32)
+    
+    label_to_index, index_to_label = get_label_dict()
 
     #Get datasets and index to label map.
-    train_dataset, valid_dataset, index_to_label = get_datasets(
-        config.train_fn,
+    train_dataset, valid_dataset = get_datasets(
+        config.file_fn,
         valid_ratio=config.valid_ratio
     )
     
+    # load model, tokenizer    
+    model, tokenizer = get_pretrained_model(32)
+
     print(
         '|train| = ', len(train_dataset),
         '|valid| = ', len(valid_dataset)
