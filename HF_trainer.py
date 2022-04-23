@@ -1,7 +1,7 @@
 import argparse
 import random
 import numpy as np
-
+import pandas as pd
 from sklearn.metrics import f1_score, precision_score, recall_score
 
 import torch
@@ -80,14 +80,14 @@ def get_datasets(fn, valid_ratio=.2):
     idx = int(len(texts)*(1-valid_ratio))
 
     train_dataset = TokenDataset(texts[:idx], labels[:idx])
-    test_dataset = TokenDataset(texts[idx:], labels[idx:])
+    valid_dataset = TokenDataset(texts[idx:], labels[idx:])
      
     return train_dataset, valid_dataset, index_to_label
 
 def get_pretrained_model(num_labels: int):
 
     # tokenizer_load
-    tokenizer_load = KoBertTokenizer if config.use_monologg else Autotokenizer
+    tokenizer_load = KoBertTokenizer if config.use_monologg else AutoTokenizer
     tokenizer = tokenizer_load.from_pretrained(
         config.pretrained_model_name
     )
