@@ -73,7 +73,7 @@ def get_label_dict():
 
 def get_datasets(fn, valid_ratio=.2):
     #Get list of labels and list of texts
-    data = pd.read_csv(fn)
+    data = pd.read_csv(fn,sep='/t')
     data['sentence'].dropna(axis=0, inplace=True)
 
     # Shuffle before split into train and validation set.
@@ -115,7 +115,7 @@ def main(config):
     )
     
     # load model, tokenizer    
-    model, tokenizer = get_pretrained_model(32)
+    model, tokenizer = get_pretrained_model(len(label_to_index))
 
     print(
         '|train| = ', len(train_dataset),

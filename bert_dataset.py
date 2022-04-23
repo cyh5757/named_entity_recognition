@@ -31,6 +31,34 @@ class TokenCollator():
 
         return return_value
 
+    
+    def __BIO_tagging(self, text_tokens, ne):
+        labeled_sequence = [token if token in ['[CLS]', '[SEP]', '[PAD]'] else 'O' for token in text_tokens]
+        ne_no = len(ne.keys())
+        if ne_no > 0:
+            for idx in range(1, ne_no+1):
+                ne_dict = ne[idx]
+                isbegin = True
+                for word_idx, word in enumerate(text_tokens):
+
+                    if '##' in word:
+                        word = word.replace('##', '')
+
+                    if word in ne_dict['form']:
+                        if isbegin:
+                            labeled_sequence[word_idx] = str(
+                                ne_dict['label'][:2]
+                                ) + '_B'
+                            isbegin = True
+                            continue
+
+                        elif isbegin == False & (('_B' in labeled_sequence[word_idx-1]) or ('_I' in labeled_sequence[word_idx-1])):
+                            labeled_sequence[word_idx] = str(
+                                ne_dict['label'][:2]
+                            ) + '_I'
+                            continue
+
+        return labeled_sequence
 
 class TokenDataset(Dataset):
 
