@@ -118,123 +118,49 @@ def main(config):
     model, tokenizer = get_pretrained_model(len(label_to_index))
 
     print(
+        model,
+        tokenizer
+    )
+    print(
         '|train| = ', len(train_dataset),
         '|valid| = ', len(valid_dataset)
     )
 
-    total_batch_size = config.batch_size_per_device * torch.cuda.device_count()
-    n_total_iterations = int(len(train_dataset) / total_batch_size * config.n_epochs)
-    n_warmup_steps = int(n_total_iterations * config.warmup_ratio)
-    print(
-        '#total_iters =', n_total_iterations,
-        '#warmup_iters =', n_warmup_steps,
-    )
-
-
-
-metric = load_metric("seqeval")
-
-
-def compute_metrics(p):
-    predictions, labels = p
-    predictions = np.argmax(predictions, axis=2)
-
-    # Remove ignored index (special tokens)
-    true_predictions = [
-        [list_of_labels[p] for (p, l) in zip(prediction, label) if l != -100]
-        for prediction, label in zip(predictions, labels)
-    ]
-    true_labels = [
-        [list_of_labels[l] for (p, l) in zip(prediction, label) if l != -100]
-        for prediction, label in zip(predictions, labels)
-    ]
-
-    results = metric.compute(predictions=true_predictions, references=true_labels)
-    return {
-        "precision": results["overall_precision"],
-        "recall": results["overall_recall"],
-        "f1": results["overall_f1"],
-        "accuracy": results["overall_accuracy"],
-    }
-
-
-batchify = DataCollatorForTokenClassification(
-    tokenizer=tokenizer,
-    padding=True
-)
-    # training_aregs = TrainingArguments(
-    #     output_dir='./.checkpoints',
-    #     num_train_epochs=config.n_epochs,
-    #     per_device_train_batch_size=config.batch_size_per_device,
-    #     per_device_eval_batch_size=config.batch_size_per_device,
-    #     warmup_steps=n_warmup_steps,
-    #     weight_decay=0.01,
-    #     fp16=True,
-    #     evaluation_strategy='epoch',
-    #     save_strategy='epoch',
-    #     logging_steps=n_total_iterations // 100,
-    #     save_steps=n_total_iterations // config.n_epochs,
-    #     load_best_model_at_end=True,
-    # )
-    # #
-
-    # trainer = Trainer(
-    #     model=model,
-    #     args=training_args,
-    #     data_collator=TokenCollator(tokenizer,
-    #                                 config.max_length,
-    #                                 with_text=False),
-    #     train_dataset=train_dataset,
-    #     eval_dataset=valid_dataset,
-    #     compute_metrics=compute_metrics
+    # total_batch_size = config.batch_size_per_device * torch.cuda.device_count()
+    # n_total_iterations = int(len(train_dataset) / total_batch_size * config.n_epochs)
+    # n_warmup_steps = int(n_total_iterations * config.warmup_ratio)
+    # print(
+    #     '#total_iters =', n_total_iterations,
+    #     '#warmup_iters =', n_warmup_steps,
     # )
 
-    # trainer.train()
 
-training_args = TrainingArguments(
-        output_dir='./results',     
-        evaluation_strategy="epoch",
-        per_device_train_batch_size=32, 
-        per_device_eval_batch_size=32,
-        learning_rate=1e-4,
-        weight_decay=0.01,
-        adam_beta1=.9,
-        adam_beta2=.95,
-        adam_epsilon=1e-8,
-        max_grad_norm=1.,
-        num_train_epochs=2,
-        lr_scheduler_type="linear",
-        warmup_steps=100,
-        logging_dir='./logs',
-        logging_strategy="steps",
-        logging_first_step=True,
-        logging_steps=100,
-        save_strategy="epoch",
-        seed=42,
-        dataloader_drop_last=False,
-        dataloader_num_workers=2
-)
 
-trainer = Trainer(
-    args=training_args,
-    data_collator=batchify,
-    model=model,
-    train_dataset=train_ds,
-    eval_dataset=valid_ds,
-    compute_metrics=compute_metrics
-)
+# metric = load_metric("seqeval")
 
-trainer.train()
 
-torch.save({
-    'rnn': None,
-    'cnn': None,
-    'bert': trainer.model.state_dict(),
-    'config': config,
-    'vocab': None,
-    'classes': index_to_label,
-    'tokenizer': tokenizer,
-}, config.model_fn)
+# def compute_metrics(p):
+#     predictions, labels = p
+#     predictions = np.argmax(predictions, axis=2)
+
+#     # Remove ignored index (special tokens)
+#     true_predictions = [
+#         [list_of_labels[p] for (p, l) in zip(prediction, label) if l != -100]
+#         for prediction, label in zip(predictions, labels)
+#     ]
+#     true_labels = [
+#         [list_of_labels[l] for (p, l) in zip(prediction, label) if l != -100]
+#         for prediction, label in zip(predictions, labels)
+#     ]
+
+#     results = metric.compute(predictions=true_predictions, references=true_labels)
+#     return {
+#         "precision": results["overall_precision"],
+#         "recall": results["overall_recall"],
+#         "f1": results["overall_f1"],
+#         "accuracy": results["overall_accuracy"],
+#     }
+
 
 if __name__ == '__main__':
     config = define_argparser()
