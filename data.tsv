@@ -1,0 +1,8 @@
+4 files found :  ['21SX.tsv', '21NX.tsv', '19NX.tsv', '19SX.tsv']
+file 0 :  351568
+file 1 :  78170
+file 2 :  150082
+file 3 :  223962
+|data before preprocessing| 803782
+|data after preprocessing| 780546
+|train| 624436 / |test| 156110

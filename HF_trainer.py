@@ -32,7 +32,6 @@ def define_argparser():
     p = argparse.ArgumentParser()
 
     p.add_argument('--file_fn', required=True)
-    p.add_argument('--train_fn', required=True)
 
     # Recommended model list:
     # - kykim/bert-kor-base //예시
