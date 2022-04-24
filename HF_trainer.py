@@ -102,6 +102,26 @@ def get_pretrained_model(num_labels: int):
     )
     return model, tokenizer
 
+def compute_metrics(pred):
+    metric = load_metric('seqeval')
+
+    labels = pred.label_ids
+    predictions = pred.predictions.argmax(2)
+
+    true_predictions = [[p for p, l in zip(prediction, label) if l >= 0] for prediction, label in zip(predictions, labels)]
+    true_labels = [[l for p, l in zip(prediction, label) if l >= 0] for prediction, label in zip(predictions, labels)]
+    
+    results = metric.compute(predictions=true_predictions, references=true_labels)
+
+    flattened_results = {
+        "overall_precision": results["overall_precision"],
+        "overall_recall": results["overall_recall"],
+        "overall_f1": results["overall_f1"],
+        "overall_accuracy": results["overall_accuracy"],
+    }
+    return flattened_results
+
+
 def main(config):
 
     
@@ -142,42 +162,22 @@ def main(config):
 
 
     
-    learning_rate=2e-5,
-    per_device_train_batch_size=16,
-    per_device_eval_batch_size=16,
-    
-    
     training_args = TrainingArguments(
         output_dir='/content/drive/MyDrive/NER/model',
-        num_train_epochs=7
+        num_train_epochs=7,
         per_device_train_batch_size=16,
         per_device_eval_batch_size=16,
         warmup_steps=n_warmup_steps,
         weight_decay=0.01,
-        fp16=True,
+        # fp16=True,
         evaluation_strategy='epoch',
         save_strategy='epoch',
-        logging_steps= 1000,
+        logging_steps=n_total_iterations // 100,
+        save_steps=n_total_iterations // config.n_epochs,
         load_best_model_at_end=True,
     )
 
-    def compute_metrics(pred):
-        metric = load_metric('seqeval')
 
-        labels = pred.label_ids
-        predictions = pred.predictions.argmax(2)
-
-        true_predictions = [[p for p, l in zip(prediction, label) if l >= 0] for prediction, label in zip(predictions, labels)]
-        true_labels = [[l for p, l in zip(prediction, label) if l >= 0] for prediction, label in zip(predictions, labels)]
-        
-        results = metric.compute(predictions=true_predictions, references=true_labels)
-
-        return {
-            "precision" : results["overall_precision"],
-            "recall" : results["overall_recall"],
-            "f1" : results["overall_f1"],
-            "accuracy" : results["overall_accuracy"],
-        }
 
 
     trainer = Trainer(
