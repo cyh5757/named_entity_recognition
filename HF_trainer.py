@@ -72,7 +72,7 @@ def get_label_dict():
 
 def get_datasets(fn, valid_ratio=.2):
     #Get list of labels and list of texts
-    data = pd.read_csv(fn,sep='/t')
+    data = pd.read_csv(fn,sep='\t')
     data['sentence'].dropna(axis=0, inplace=True)
 
     # Shuffle before split into train and validation set.
@@ -125,13 +125,13 @@ def main(config):
         '|valid| = ', len(valid_dataset)
     )
 
-    # total_batch_size = config.batch_size_per_device * torch.cuda.device_count()
-    # n_total_iterations = int(len(train_dataset) / total_batch_size * config.n_epochs)
-    # n_warmup_steps = int(n_total_iterations * config.warmup_ratio)
-    # print(
-    #     '#total_iters =', n_total_iterations,
-    #     '#warmup_iters =', n_warmup_steps,
-    # )
+    total_batch_size = config.batch_size_per_device * torch.cuda.device_count()
+    n_total_iterations = int(len(train_dataset) / total_batch_size * config.n_epochs)
+    n_warmup_steps = int(n_total_iterations * config.warmup_ratio)
+    print(
+        '#total_iters =', n_total_iterations,
+        '#warmup_iters =', n_warmup_steps,
+    )
 
 
 

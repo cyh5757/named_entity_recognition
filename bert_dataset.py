@@ -3,35 +3,57 @@ from torch.utils.data import Dataset
 
 
 class TokenCollator():
-
-    def __init__(self, tokenizer, max_length, with_text=True):
+    
+    def __init__(self, tokenizer, max_length, labels_map, with_text=True) -> None:
         self.tokenizer = tokenizer
         self.max_length = max_length
+        self.labels_map = labels_map
         self.with_text = with_text
 
     def __call__(self, samples):
         texts = [s['text'] for s in samples]
         labels = [s['label'] for s in samples]
+        
+        encoded = self.tokenizer(texts, 
+                                   add_special_tokens=True,
+                                   padding=True,
+                                   truncation=True,
+                                   return_tensors='pt',
+                                   return_attention_mask=True,
+                                   return_length=True)
 
-        encoding = self.tokenizer(
-            texts,
-            padding=True,
-            truncation=True,
-            return_tensors="pt",
-            max_length=self.max_length
-        )
+        label_ids = []
+        for text, label in zip(texts, labels):
+            text_token= self.tokenizer.tokenize(text, 
+                                                add_special_tokens=True, 
+                                                max_length=encoded['length'][0],
+                                                truncation=True,
+                                                padding='max_length')
+            label_sequence = self.__BIO_tagging(text_token, label)
+            label_id = [self.labels_map[key] if key in self.labels_map.keys() else -100 for key in label_sequence]  ### KLUE only.  
+            label_ids.append(label_id)
 
         return_value = {
-            'input_ids': encoding['input_ids'],
-            'attention_mask': encoding['attention_mask'],
-            'labels': torch.tensor(labels, dtype=torch.long),
+            'input_ids': encoded['input_ids'],
+            'attention_mask': encoded['attention_mask'],
+            'labels': torch.tensor(label_ids, dtype=torch.long),
         }
         if self.with_text:
             return_value['text'] = texts
 
         return return_value
 
-    
+    def __tokenize_sentence(self, sentences, length):
+        sentence_tok = []
+        for sentence in sentences:
+            sentence_tok.append(self.tokenizer.tokenize(sentence,
+                                                        add_special_tokens=True,
+                                                        max_length=length,
+                                                        truncation=True,
+                                                        padding='max_length'))
+        return sentence_tok
+
+
     def __BIO_tagging(self, text_tokens, ne):
         labeled_sequence = [token if token in ['[CLS]', '[SEP]', '[PAD]'] else 'O' for token in text_tokens]
         ne_no = len(ne.keys())
@@ -60,15 +82,16 @@ class TokenCollator():
 
         return labeled_sequence
 
+
 class TokenDataset(Dataset):
 
-    def __init__(self, texts, labels):
+    def __init__(self, texts, labels) -> None:
         self.texts = texts
         self.labels = labels
-    
+
     def __len__(self):
         return len(self.texts)
-    
+
     def __getitem__(self, item):
         text = str(self.texts[item])
         label = self.labels[item]
