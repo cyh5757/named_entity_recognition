@@ -32,9 +32,9 @@ def define_argparser():
     p = argparse.ArgumentParser()
 
     p.add_argument('--file_fn', required=True)
+    p.add_argument('--model_fn', required=True)
 
     # Recommended model list:
-    # - kykim/bert-kor-base //예시
     # - monologg/kobert
     # - klue/bert-base
     
@@ -125,7 +125,14 @@ def main(config):
         '|valid| = ', len(valid_dataset)
     )
 
-    total_batch_size = config.batch_size_per_device * torch.cuda.device_count()
+
+
+
+
+
+
+    # * torch.cuda.device_count()
+    total_batch_size = config.batch_size_per_device 
     n_total_iterations = int(len(train_dataset) / total_batch_size * config.n_epochs)
     n_warmup_steps = int(n_total_iterations * config.warmup_ratio)
     print(
@@ -135,31 +142,69 @@ def main(config):
 
 
 
-# metric = load_metric("seqeval")
+metric = load_metric("seqeval")
 
 
-# def compute_metrics(p):
-#     predictions, labels = p
-#     predictions = np.argmax(predictions, axis=2)
+def compute_metrics(pred):
+    metric = load_metric('seqeval')
 
-#     # Remove ignored index (special tokens)
-#     true_predictions = [
-#         [list_of_labels[p] for (p, l) in zip(prediction, label) if l != -100]
-#         for prediction, label in zip(predictions, labels)
-#     ]
-#     true_labels = [
-#         [list_of_labels[l] for (p, l) in zip(prediction, label) if l != -100]
-#         for prediction, label in zip(predictions, labels)
-#     ]
+    labels = pred.label_ids
+    predictions = pred.predictions.argmax(2)
 
-#     results = metric.compute(predictions=true_predictions, references=true_labels)
-#     return {
-#         "precision": results["overall_precision"],
-#         "recall": results["overall_recall"],
-#         "f1": results["overall_f1"],
-#         "accuracy": results["overall_accuracy"],
-#     }
+    true_predictions = [[p for p, l in zip(prediction, label) if l >= 0] for prediction, label in zip(predictions, labels)]
+    true_labels = [[l for p, l in zip(prediction, label) if l >= 0] for prediction, label in zip(predictions, labels)]
+    
+    results = metric.compute(predictions=true_predictions, references=true_labels)
 
+    return {
+        "precision" : results["overall_precision"],
+        "recall" : results["overall_recall"],
+        "f1" : results["overall_f1"],
+        "accuracy" : results["overall_accuracy"],
+    }
+
+
+
+
+    training_args = TrainingArguments(
+        output_dir='./.checkpoints',
+        num_train_epochs=config.n_epochs,
+        per_device_train_batch_size=config.batch_size_per_device,
+        per_device_eval_batch_size=config.batch_size_per_device,
+        warmup_steps=n_warmup_steps,
+        weight_decay=0.01,
+        fp16=True,
+        evaluation_strategy='epoch',
+        save_strategy='epoch',
+        logging_steps=n_total_iterations // 100,
+        save_steps=n_total_iterations // config.n_epochs,
+        load_best_model_at_end=True,
+    )
+
+
+    trainer = Trainer(
+        model=model,
+        args=training_args,
+        data_collator=TokenCollator(tokenizer=tokenizer,
+                                  max_length=config.max_length,
+                                  labels_map=label_to_index,
+                                  with_text=False),
+        train_dataset=train_dataset,
+        eval_dataset=valid_dataset,
+        compute_metrics=compute_metrics,
+    )
+
+    trainer.train()
+
+    torch.save({
+        'rnn': None,
+        'cnn': None,
+        'bert': trainer.model.state_dict(),
+        'config': config,
+        'vocab': None,
+        'classes': index_to_label,
+        'tokenizer': tokenizer,
+    }, config.model_fn)
 
 if __name__ == '__main__':
     config = define_argparser()
