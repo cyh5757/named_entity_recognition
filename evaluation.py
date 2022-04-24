@@ -6,11 +6,12 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torchtext import data
 
+from transformers import BertTokenizerFast
+from transformers import BertForSequenceClassification, AlbertForSequenceClassification
 
-#KLUE
+#using KLUE
 from transformers import AutoTokenizer
 from transformers import AutoModelForTokenClassification
-
 
 def define_argparser():
     '''
@@ -55,8 +56,8 @@ def main(config):
 
     with torch.no_grad():
         # Declare model and load pre-trained weights.
-        tokenizer = BertTokenizerFast.from_pretrained(train_config.pretrained_model_name)
-        model_loader = AlbertForSequenceClassification if train_config.use_albert else BertForSequenceClassification
+        tokenizer = AutoTokenizer.from_pretrained(train_config.pretrained_model_name)
+        model_loader = AutoModelForTokenClassification
         model = model_loader.from_pretrained(
             train_config.pretrained_model_name,
             num_labels=len(index_to_label)
