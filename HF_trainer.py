@@ -141,33 +141,16 @@ def main(config):
     )
 
 
-
-metric = load_metric("seqeval")
-
-
-def compute_metrics(pred):
-    metric = load_metric('seqeval')
-
-    labels = pred.label_ids
-    predictions = pred.predictions.argmax(2)
-
-    true_predictions = [[p for p, l in zip(prediction, label) if l >= 0] for prediction, label in zip(predictions, labels)]
-    true_labels = [[l for p, l in zip(prediction, label) if l >= 0] for prediction, label in zip(predictions, labels)]
-    
-    results = metric.compute(predictions=true_predictions, references=true_labels)
-
-    return {
-        "precision" : results["overall_precision"],
-        "recall" : results["overall_recall"],
-        "f1" : results["overall_f1"],
-        "accuracy" : results["overall_accuracy"],
-    }
-
-
-
+    total_batch_size = config.batch_size_per_device * torch.cuda.device_count()
+    n_total_iterations = int(len(train_dataset) / total_batch_size * config.n_epochs)
+    n_warmup_steps = int(n_total_iterations * config.warmup_ratio)
+    print(
+        '#total_iters =', n_total_iterations,
+        '#warmup_iters =', n_warmup_steps,
+    )
 
     training_args = TrainingArguments(
-        output_dir='./.checkpoints',
+        output_dir='/content/drive/MyDrive/NER/model',
         num_train_epochs=config.n_epochs,
         per_device_train_batch_size=config.batch_size_per_device,
         per_device_eval_batch_size=config.batch_size_per_device,
@@ -180,6 +163,24 @@ def compute_metrics(pred):
         save_steps=n_total_iterations // config.n_epochs,
         load_best_model_at_end=True,
     )
+
+    def compute_metrics(pred):
+        metric = load_metric('seqeval')
+
+        labels = pred.label_ids
+        predictions = pred.predictions.argmax(2)
+
+        true_predictions = [[p for p, l in zip(prediction, label) if l >= 0] for prediction, label in zip(predictions, labels)]
+        true_labels = [[l for p, l in zip(prediction, label) if l >= 0] for prediction, label in zip(predictions, labels)]
+        
+        results = metric.compute(predictions=true_predictions, references=true_labels)
+
+        return {
+            "precision" : results["overall_precision"],
+            "recall" : results["overall_recall"],
+            "f1" : results["overall_f1"],
+            "accuracy" : results["overall_accuracy"],
+        }
 
 
     trainer = Trainer(

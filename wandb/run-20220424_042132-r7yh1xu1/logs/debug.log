@@ -1,0 +1,32 @@
+2022-04-24 04:21:32,010 INFO    MainThread:9483 [wandb_setup.py:_flush():75] Loading settings from /root/.config/wandb/settings
+2022-04-24 04:21:32,010 INFO    MainThread:9483 [wandb_setup.py:_flush():75] Loading settings from /content/named_entity_recognition/wandb/settings
+2022-04-24 04:21:32,011 INFO    MainThread:9483 [wandb_setup.py:_flush():75] Loading settings from environment variables: {'api_key': '***REDACTED***', 'entity': 'KOREAN_Tokenizing', 'project': 'finetune_klue_bert_ner'}
+2022-04-24 04:21:32,011 INFO    MainThread:9483 [wandb_setup.py:_flush():75] Inferring run settings from compute environment: {'program': '<python with no main file>'}
+2022-04-24 04:21:32,011 INFO    MainThread:9483 [wandb_init.py:_log_setup():437] Logging user logs to /content/named_entity_recognition/wandb/run-20220424_042132-r7yh1xu1/logs/debug.log
+2022-04-24 04:21:32,012 INFO    MainThread:9483 [wandb_init.py:_log_setup():438] Logging internal logs to /content/named_entity_recognition/wandb/run-20220424_042132-r7yh1xu1/logs/debug-internal.log
+2022-04-24 04:21:32,012 INFO    MainThread:9483 [wandb_init.py:init():471] calling init triggers
+2022-04-24 04:21:32,012 INFO    MainThread:9483 [wandb_init.py:init():475] wandb.init called with sweep_config: {}
+config: {}
+2022-04-24 04:21:32,012 INFO    MainThread:9483 [wandb_init.py:init():524] starting backend
+2022-04-24 04:21:32,013 INFO    MainThread:9483 [backend.py:_multiprocessing_setup():99] multiprocessing start_methods=fork,spawn,forkserver, using: spawn
+2022-04-24 04:21:32,017 INFO    MainThread:9483 [backend.py:ensure_launched():217] starting backend process...
+2022-04-24 04:21:32,080 INFO    MainThread:9483 [backend.py:ensure_launched():222] started backend process with pid: 11137
+2022-04-24 04:21:32,083 INFO    MainThread:9483 [wandb_init.py:init():533] backend started and connected
+2022-04-24 04:21:32,136 INFO    MainThread:9483 [wandb_run.py:_label_probe_notebook():1084] probe notebook
+2022-04-24 04:21:34,687 WARNING MainThread:9483 [wandb_init.py:init():1016] interrupted
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.7/dist-packages/wandb/sdk/wandb_init.py", line 995, in init
+    run = wi.init()
+  File "/usr/local/lib/python3.7/dist-packages/wandb/sdk/wandb_init.py", line 593, in init
+    run._label_probe_notebook(self.notebook)
+  File "/usr/local/lib/python3.7/dist-packages/wandb/sdk/wandb_run.py", line 1087, in _label_probe_notebook
+    data = notebook.probe_ipynb()
+  File "/usr/local/lib/python3.7/dist-packages/wandb/jupyter.py", line 365, in probe_ipynb
+    colab_ipynb = attempt_colab_load_ipynb()
+  File "/usr/local/lib/python3.7/dist-packages/wandb/jupyter.py", line 267, in attempt_colab_load_ipynb
+    response = colab._message.blocking_request("get_ipynb", timeout_sec=5)
+  File "/usr/local/lib/python3.7/dist-packages/google/colab/_message.py", line 175, in blocking_request
+    return read_reply_from_input(request_id, timeout_sec)
+  File "/usr/local/lib/python3.7/dist-packages/google/colab/_message.py", line 101, in read_reply_from_input
+    time.sleep(0.025)
+KeyboardInterrupt
