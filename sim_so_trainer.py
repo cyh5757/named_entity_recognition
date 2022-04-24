@@ -97,7 +97,7 @@ def main(config):
     )
 
     total_batch_size = config.batch_size_per_device * torch.cuda.device_count()
-    n_total_iterations = int(len(train_dataset) / total_batch_size * config.n_epochs)
+    n_total_iterations = int(len(train_dataset) / total_batch_size * config.n_epochs)   
     n_warmup_steps = int(n_total_iterations * config.warmup_ratio)
     print(
         '#total_iters =', n_total_iterations,
