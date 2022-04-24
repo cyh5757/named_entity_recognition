@@ -35,5 +35,7 @@ def pre_trained->get_datasets -> trainer(huggingface) ->
 
 
 /*--꿀팁 : 깃 필사할때 main 부터 시작해서, main에따라 def는 나중에 정리 */
+
+
 /*참조 : https://github.com/sim-so/PyTorch-Ko-NER/tree/916d330b291ef6ad24275574a26b40b558ffd359*/
 
