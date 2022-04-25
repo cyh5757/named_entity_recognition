@@ -152,8 +152,8 @@ def main(config):
 
 
 
-
-    total_batch_size = config.batch_size_per_device * torch.cuda.device_count()
+    # * torch.cuda.device_count()
+    total_batch_size = config.batch_size_per_device 
     n_total_iterations = int(len(train_dataset) / total_batch_size * config.n_epochs)
     n_warmup_steps = int(n_total_iterations * config.warmup_ratio)
     print(
@@ -164,7 +164,7 @@ def main(config):
 
     
     training_args = TrainingArguments(
-        output_dir='/content/drive/MyDrive/NER/model',
+        output_dir='./.checkpoint',
         num_train_epochs=7,
         per_device_train_batch_size=16,
         per_device_eval_batch_size=16,
@@ -173,7 +173,7 @@ def main(config):
         # fp16=True,
         evaluation_strategy='epoch',
         save_strategy='epoch',
-        logging_steps=n_total_iterations // 100,
+        logging_steps=n_total_iterations, #// 100,
         save_steps=n_total_iterations // config.n_epochs,
         load_best_model_at_end=True,
     )

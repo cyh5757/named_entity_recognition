@@ -53,34 +53,40 @@ class TokenCollator():
                                                         padding='max_length'))
         return sentence_tok
 
+    def BIO_tagging(sentence_tok, ne):
 
-    def __BIO_tagging(self, text_tokens, ne):
-        labeled_sequence = [token if token in ['[CLS]', '[SEP]', '[PAD]'] else 'O' for token in text_tokens]
+        special_token = ['[CLS]', '[PAD]', '[SEP]', '[UNK]']
+        result = []
+        temp = [sentence_tok[x] if sentence_tok[x] in special_token else 'O' for x in range(len(sentence_tok))]
         ne_no = len(ne.keys())
         if ne_no > 0:
+
             for idx in range(1, ne_no+1):
                 ne_dict = ne[idx]
+                label_length = len(ne_dict['form'].replace(' ', ''))
                 isbegin = True
-                for word_idx, word in enumerate(text_tokens):
-
-                    if '##' in word:
-                        word = word.replace('##', '')
-
+                for word_idx, word in enumerate(sentence_tok):
+                    if label_length == 0:
+                        break
+                if ('##' in word) or ('▁' in word):
+                    if word == '▁':
+                        continue
+                    word = word.replace('##', '')
+                    word = word.replace('▁', '')
+                    
+                    
                     if word in ne_dict['form']:
                         if isbegin:
-                            labeled_sequence[word_idx] = str(
-                                ne_dict['label'][:2]
-                                ) + '_B'
-                            isbegin = True
+                            temp[word_idx] = str(ne_dict['label'][:2])+'_B'
+                            isbegin = False
+                            label_length = label_length - len(word)
+                            continue
+                        elif (isbegin == False) & (label_length > 0) & (('_B' in temp[word_idx-1]) or ('_I' in temp[word_idx-1])):
+                            temp[word_idx] = str(ne_dict['label'][:2])+'_I'
+                            label_length = label_length - len(word)
                             continue
 
-                        elif isbegin == False & (('_B' in labeled_sequence[word_idx-1]) or ('_I' in labeled_sequence[word_idx-1])):
-                            labeled_sequence[word_idx] = str(
-                                ne_dict['label'][:2]
-                            ) + '_I'
-                            continue
-
-        return labeled_sequence
+        return temp
 
 
 class TokenDataset(Dataset):
