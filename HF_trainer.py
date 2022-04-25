@@ -119,6 +119,7 @@ def compute_metrics(pred):
         "overall_f1": results["overall_f1"],
         "overall_accuracy": results["overall_accuracy"],
     }
+
     return flattened_results
 
 
@@ -151,8 +152,8 @@ def main(config):
 
 
 
-    # * torch.cuda.device_count()
-    total_batch_size = config.batch_size_per_device 
+
+    total_batch_size = config.batch_size_per_device * torch.cuda.device_count()
     n_total_iterations = int(len(train_dataset) / total_batch_size * config.n_epochs)
     n_warmup_steps = int(n_total_iterations * config.warmup_ratio)
     print(
