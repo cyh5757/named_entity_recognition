@@ -3,3 +3,4 @@ pip install 'git+https://github.com/SKTBrain/KoBERT.git#egg=kobert_tokenizer&sub
 pip install 'git+https://github.com/monologg/KoBERT-Transformers.git#egg=kobert_transformers'
 pip install datasets
 pip install seqeval
+pip install wandb 

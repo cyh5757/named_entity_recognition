@@ -1,0 +1,29 @@
+{
+    "os": "Linux-5.4.144+-x86_64-with-Ubuntu-18.04-bionic",
+    "python": "3.7.13",
+    "heartbeatAt": "2022-04-25T03:00:27.109134",
+    "startedAt": "2022-04-25T03:00:23.677433",
+    "docker": null,
+    "gpu": "Tesla P100-PCIE-16GB",
+    "gpu_count": 1,
+    "cpu_count": 2,
+    "cuda": null,
+    "args": [
+        "--file_fn",
+        "/content/drive/MyDrive/NER/data/train.tsv",
+        "--model_fn",
+        "/content/drive/MyDrive/NER/model"
+    ],
+    "state": "running",
+    "program": "HF_trainer.py",
+    "codePath": "HF_trainer.py",
+    "git": {
+        "remote": "https://github.com/cyh5757/named_entity_recognition.git",
+        "commit": "694069751ec93e02b4a26a3692ac98da623b6f62"
+    },
+    "email": "cyh8781@gmail.com",
+    "root": "/content/named_entity_recognition",
+    "host": "0264e13b208a",
+    "username": "root",
+    "executable": "/usr/bin/python3"
+}
