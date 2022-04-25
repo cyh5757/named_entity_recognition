@@ -53,7 +53,7 @@ class TokenCollator():
                                                         padding='max_length'))
         return sentence_tok
 
-    def BIO_tagging(sentence_tok, ne):
+    def __BIO_tagging(sentence_tok, ne):
 
         special_token = ['[CLS]', '[PAD]', '[SEP]', '[UNK]']
         result = []
